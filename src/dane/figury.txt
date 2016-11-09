@@ -1,0 +1,33 @@
+START
+ZMIENNE i, x, y, x1, y1, x2, y2, figura, kolor, szer, wys
+{
+i = 0
+figura = 'trojkat' 
+kolor = 'zielony'                                                    
+x = 500
+y = 100
+x1 = 400 
+y1 = 200
+x2 = 600 
+y2 = 200                                        
+PETLA (i<3) {
+i = i + 1
+y1 = y1 + 100
+y2 = y2 + 100
+RYSUJ(figura, x, y, x1, y1, x2, y2, kolor)
+}
+x = 480 
+y = 500
+szer = 50 
+wys = 100
+figura = 'prostokat' 
+kolor = 'brazowy'
+RYSUJ(figura, x, y, szer, wys, kolor)
+x = 50
+y = 50
+szer = 200
+figura = 'kolo'
+kolor = 'zolty'
+RYSUJ(figura, x, y, szer, kolor)
+}
+KONIEC

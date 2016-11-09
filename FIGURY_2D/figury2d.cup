@@ -1,0 +1,193 @@
+package parser;
+
+import java_cup.runtime.*;
+   
+parser code {:
+    
+
+    ListaZmiennych listaZmiennych = new ListaZmiennych();
+
+
+    //-------------------------------------------
+
+
+    public void syntax_error(Symbol token)
+    {     
+      report_error("Blad skladniowy ",token);
+    }
+
+
+    public void report_error(String message, Object info) 
+    {           
+        StringBuffer m = new StringBuffer(message);              
+                            
+        if (info instanceof java_cup.runtime.Symbol)
+        {            
+            java_cup.runtime.Symbol s = (java_cup.runtime.Symbol) info;
+
+            if (s.left >= 0) 
+            {
+                m.append(" w wierszu "+(s.left+1));
+                if (s.right>=0) m.append(" w kolumnie "+(s.right+1));
+            }                
+        }
+        
+        System.err.println("BLAD "+m);
+    }
+   
+
+    public void report_fatal_error(String message, Object info) 
+    {
+        report_error("KRYTYCZNY "+message, info);
+        System.exit(1);
+    }
+
+:};
+   
+
+   
+/* ------------Declaration of Terminals and Non Terminals Section----------- */
+
+terminal PLUS, MINUS;
+terminal PRZECINEK, LNAWIAS, PNAWIAS, APOSTROF; 
+terminal START, RYSUJ, KONIEC, ZMIENNE, PRZYPISZ;
+terminal LKLAMRA, PKLAMRA;
+terminal ROWNE, NIEROWNE, WIEKSZE, MNIEJSZE;
+terminal JESLI, PETLA;
+terminal Integer  LICZBA;
+terminal String ID;
+
+non terminal TProgram program;
+non terminal TDeklaracja deklaracja;
+non terminal TZmienne zmienne;
+non terminal TZmienna zmienna;
+non terminal TBlok blok;
+non terminal TSekwencjaInstrukcji sekwencja_instrukcji;
+non terminal TInstrukcja instrukcja;
+non terminal TProstaInstrukcja prosta_instrukcja;
+non terminal TGraficznaInstrukcja graficzna_instrukcja;
+non terminal TZlozonaInstrukcja zlozona_instrukcja;
+
+non terminal TWarunek warunek;
+non terminal TWarunkowa warunkowa;
+non terminal TPetla petla;
+non terminal TWyrazenie wyrazenie;
+non terminal TSkladnik skladnik;
+
+precedence left WPR; //Dla rozstrzygniecia "wiszacego ELSE"
+
+
+/* ----------------------------Grammar Section-------------------- */
+
+  program ::= START deklaracja:d blok:b KONIEC      
+            {: RESULT = new TProgram(d,b); :}
+            |
+            blok:b KONIEC
+            {: RESULT = new TProgram(b); :}
+            |
+            ;
+
+  deklaracja ::= ZMIENNE zmienne:zm
+                 {: RESULT = new TDeklaracja(zm); :}
+                 ;
+
+  zmienne ::= zmienna:z PRZECINEK zmienne:zm
+              {: RESULT = new TZmienne(z,zm,parser.listaZmiennych); :}
+              |
+              zmienna:z
+              {: RESULT = new TZmienne(z,parser.listaZmiennych); :}
+              ;
+
+  zmienna ::= ID:i
+              {: RESULT = new TZmienna(i,parser.listaZmiennych); :}
+              ;        
+
+  blok ::= LKLAMRA sekwencja_instrukcji:si PKLAMRA
+           {: RESULT = new TBlok(si); :}
+           ;   
+
+  sekwencja_instrukcji ::= instrukcja:i 
+                            {: RESULT = new TSekwencjaInstrukcji(i); :}
+                            |
+                            sekwencja_instrukcji:si instrukcja:i
+                            {: RESULT = new TSekwencjaInstrukcji(si,i); :}
+                            ;
+
+  instrukcja ::= prosta_instrukcja:pi
+                {: RESULT = new TInstrukcja(pi); :}
+                |
+                graficzna_instrukcja:gi
+                {: RESULT = new TInstrukcja(gi); :}
+                |
+                zlozona_instrukcja:zi
+                {: RESULT = new TInstrukcja(zi); :}
+                ;
+
+  prosta_instrukcja ::= ID:i PRZYPISZ wyrazenie:w
+                        {: RESULT = new TProstaInstrukcja(i,w,parser.listaZmiennych); :}
+                        ;
+
+  graficzna_instrukcja ::= RYSUJ LNAWIAS wyrazenie:w1 PRZECINEK wyrazenie:w2 PRZECINEK wyrazenie:w3 PRZECINEK wyrazenie:w4 
+                                                      PRZECINEK wyrazenie:w5 PRZECINEK wyrazenie:w6 PRZECINEK wyrazenie:w7 
+                                                      PRZECINEK wyrazenie:w8 PNAWIAS
+                        {: RESULT = new TGraficznaInstrukcja(w1,w2,w3,w4,w5,w6,w7,w8,parser.listaZmiennych); :}
+                         |
+                        RYSUJ LNAWIAS wyrazenie:w1 PRZECINEK wyrazenie:w2 PRZECINEK wyrazenie:w3 PRZECINEK wyrazenie:w4 
+                                                   PRZECINEK wyrazenie:w5 PRZECINEK wyrazenie:w6 PNAWIAS
+                        {: RESULT = new TGraficznaInstrukcja(w1,w2,w3,w4,w5,w6,parser.listaZmiennych); :}
+                         |
+                        RYSUJ LNAWIAS wyrazenie:w1 PRZECINEK wyrazenie:w2 PRZECINEK wyrazenie:w3 PRZECINEK wyrazenie:w4 
+                                                   PRZECINEK wyrazenie:w5 PNAWIAS
+                        {: RESULT = new TGraficznaInstrukcja(w1,w2,w3,w4,w5,parser.listaZmiennych); :}
+                        ;
+
+  zlozona_instrukcja ::=  warunkowa:w 
+                        {: RESULT = new TZlozonaInstrukcja(w); :}
+                        |
+                        petla:p
+                        {: RESULT = new TZlozonaInstrukcja(p); :}
+                        |
+                        blok:b 
+                        {: RESULT = new TZlozonaInstrukcja(b); :}
+                        ;
+
+  warunkowa ::= JESLI warunek:w instrukcja:i  
+                {: RESULT = new TWarunkowa(w,i); :}                      
+                ;
+
+  petla ::= PETLA warunek:w instrukcja:i
+            {: RESULT = new TPetla(w,i); :}             
+            ;                   
+
+  warunek ::= LNAWIAS wyrazenie:wl ROWNE wyrazenie:wr PNAWIAS
+              {: RESULT = new TWarunek("ROWNE",wl,wr); :}
+              |
+              LNAWIAS wyrazenie:wl WIEKSZE wyrazenie:wr PNAWIAS
+              {: RESULT = new TWarunek("WIEKSZE",wl,wr); :}
+              |
+              LNAWIAS wyrazenie:wl MNIEJSZE wyrazenie:wr PNAWIAS
+              {: RESULT = new TWarunek("MNIEJSZE",wl,wr); :}
+              |
+              LNAWIAS wyrazenie:wl NIEROWNE wyrazenie:wr PNAWIAS
+              {: RESULT = new TWarunek("NIEROWNE",wl,wr); :}             
+              ;       
+             
+  wyrazenie ::= wyrazenie:w PLUS skladnik:s
+                 {: RESULT = new TWyrazenie("PLUS",w,s); :}
+                 |
+                 wyrazenie:w MINUS skladnik:s
+                 {: RESULT = new TWyrazenie("MINUS",w,s); :}
+                 |
+                 skladnik:s
+                 {:  RESULT = new TWyrazenie(s); :}
+                 ;
+
+  skladnik ::= LICZBA:l
+               {: RESULT = new TSkladnik(l); :}
+	       |
+               ID:s
+               {: RESULT = new TSkladnik(s,parser.listaZmiennych); :}
+               |
+               APOSTROF ID:s APOSTROF
+               {: RESULT = new TSkladnik(s); :}
+               ;  
