@@ -14,10 +14,13 @@ This project is the compiler to generate geometric figures. It has implemented f
 ```
 File of lexical analyzer for compiler: FIGURY_2D/figury2d.flex
 ```
+[figury2d.cup](https://github.com/jrswtk/CompilerFigury2D/blob/master/FIGURY_2D/figury2d.flex)
+
 * JavaCup - is a parser generator:
 ```
 File of parser generator for compiler:  FIGURY_2D/figury2d.cup
 ```
+[figury2d.flex](https://github.com/jrswtk/CompilerFigury2D/blob/master/FIGURY_2D/figury2d.cup)
 
 Classes of parser for tree of syntax generator: src/parser
 
