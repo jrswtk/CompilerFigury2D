@@ -1,6 +1,6 @@
 # Compiler Figury2D (JFlex, JavaCup):
 
-This project is the compiler to generate geometric figures. It has implemented five figures and colors. Syntax of the compiler was based on Pascal and have includes: 
+This project is the compiler to generate geometric figures. Program has implemented five figures and colors. Syntax of the compiler was based on Pascal and have includes: 
 
 * loops
 * integer values
